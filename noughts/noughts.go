@@ -1,7 +1,7 @@
 // The Game of Noughts and Crosses
 //
 //	Jan 2015
-//	  V 0.7
+//	  V 0.75
 
 package main
 
@@ -24,9 +24,29 @@ var board = []byte{
 
 var play = make([]byte, 9)
 
+
+var win = []byte{   // There are 8 rows of possible winning lines.
+	1, 2, 3,		// To use these numbers as indicies, subtract 1.
+	4, 5, 6,
+	7, 8, 9,
+	1, 4, 7,
+	2, 5, 8,
+	3, 6, 9,
+	1, 5, 9,
+	3, 5, 7,
+}
+
+
+//  If a winning row contains 3 'x's, adding the 3 as numbers equals 360.
+//  (The ascii letter small x has decimal value of 120)
+//  Similarly, the decimal value of 3 'o's is 333
+//  No other combination of 'x's, 'o's and 0's, adds up to these two nos.
+
 var gameOver bool
 
 var move byte
+
+const QUIT = 55
 
 func initVariables() {
 
@@ -67,34 +87,43 @@ func printBox(sq byte) {
 //  Ask the player for his or her next move
 
 func getMove() {
+	for {
+		m := askMove()
+		if m == QUIT {
+			os.Exit(0)
+		}
+		if m < 0 || m > 8 {	// indices, not play squares
+	fmt.Println("Invalid input. Please enter a number between 1 and 9, and press return")
+	 	// <need some logic here>
+		continue
+		}	
+		// is this move allowed? Not if square is occupied.
+		if play[m] != 0 {
+			fmt.Println("That square is occupied. Please try again.")
+		} else {
+			move = m
+			return
+		}
+	}
+}
+
+// Ask the player to play a move, a number between 1 and 9
+//
+func askMove() byte {
 	reader := bufio.NewReader(os.Stdin)
-AGAIN:	fmt.Printf("Enter your move (as a number between 1 and 9) : ")
+	fmt.Printf("Enter your move (as a number between 1 and 9) : ")
 	line, err := reader.ReadString('\n')
 	if err != nil {
-		os.Exit(1)
+		os.Exit(1)		// Something seriously wrong
 	}
-	if _, err := fmt.Sscanf(line, "%c", &move); err != nil {
-		fmt.Fprintln(os.Stderr, "invalid input\n")
-		os.Exit(1)
+	if len(line) != 2 {
+		return QUIT		// Tell the caller that player wants out!
 	}
-	fmt.Printf("value of move is %d\n", move)
-	if move > 127 {
-		os.Exit(0)
-	}
-	if move <= '0' || move > '9' {
-	 fmt.Println("Invalid input. Please enter a number between 1 and 9, and press return")
-	}
-	fmt.Printf("\nThe move was: %d ", move - '0')
-	fmt.Println("")
-	move = move - '0' - 1
-	// is this move allowed? Not if square is occupied.
-	if play[move] != 0 {
-		fmt.Println("That move is not allowed. Please try again.")
-	} else {
-		return
-	}
-	goto AGAIN
+	mv := line[0]
+	
+	return mv - '1'		// return the index into play[], corresponding to desired move
 }
+
 
 func updateAndDisplayBoard(mv byte) {
 	play[move] = mv
@@ -102,9 +131,23 @@ func updateAndDisplayBoard(mv byte) {
 }
 
 func moveWinsGame() bool {
-
+	sum := 0
+	for i := 0; i < 8; i++ {
+		sum = 0
+		for j := 0; j < 3; j++ {
+			sum += int(play[win[3*i + j] - 1])
+		}
+		// fmt.Printf("sum is %d: \n", sum)
+		if sum == 360 {		// 'x' wins
+			fmt.Println(" 'x' wins!")
+			return true
+		} else if sum == 333 {	// 'o' wins!
+			fmt.Println(" 'o' wins!")
+			return true
+		} 
+		
+	}
 	return false
-	
 }
 
 func makeComputersMove() {

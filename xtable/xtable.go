@@ -1,6 +1,15 @@
 //	xtable:  Practise your times table
-//				Feb 2015,  Ver. 0.1
+//				Feb 2015,  Ver. 0.2
 //
+//				Ver. 0.1	-	implement one play of the game
+//				Ver. 0.2	-	use Cursor codes to print success (or not) on
+//								same line as answer.
+//
+//				ToDo: create structs to hold play and game data,
+//					then add archiving of games to disk.
+//					Develop the game to record players, offer a number of
+//					plays per game, e.g. 30, and play against the clock,
+//					e.g. 60 seconds.
 
 package main
 
@@ -14,9 +23,10 @@ import (
 
 var n1, n2 int
 
+
 func main () {
 	var ans int					// holds the player's answer
-	
+	s := "\033[A\033[20C"		
 	t := time.Now()
 	rand.Seed(t.Unix())
 	//  init the first two numbers
@@ -35,8 +45,8 @@ func main () {
 	}
 	// test for the correct answer
 	if n1*n2 != ans {
-		fmt.Println("Incorrect")
+		fmt.Println("\033[A\033[20CIncorrect")		// Cursor Up and Forward 20 places
 	} else {
-		fmt.Println("Correct")
+		fmt.Println("\033[A\033[20CCorrect")		// Ditto
 	}
 }

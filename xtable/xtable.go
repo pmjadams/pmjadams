@@ -7,6 +7,8 @@
 //				Ver. 0.3	-	trying to create structs to hold play data
 //				Ver. 0.4	-	tidy up, fill in Game struct.
 //				Ver. 0.5	-	still tidying up
+//				Ver. 0.6	-	starting to data files items, debugging
+//				Ver. 0.7	-	can create/open file and append write to it
 //
 //				ToDo: 
 //					Add archiving of games to disk.
@@ -19,6 +21,7 @@ package main
 import (
 		"os"
 		"fmt"
+		"log"
 		"bufio"
 		"math/rand"
 		"time"
@@ -58,8 +61,54 @@ func (play Play) String() string {
 var	n1, n2 int
 var ans int
 
+const (
+		magicNumber = 0x125E
+		fileVersion = 100
+)
+
+// utility function
+func check(e error) {
+    if e != nil {
+        log.Fatal(e)
+    }
+}
 
 func main () {
+  //construct the filename for datafile
+	var t time.Time
+	var ss, filename string
+	var fields []string
+	t = time.Now()
+	ss = t.Format(time.RFC3339)
+	fields = strings.Split(ss, "T")
+	filename = "xt" + fields[0] + ".xtd"
+  // Open this file, create it if not exists
+	fmt.Println(filename)
+	f, err := os.Open(filename)
+    if err != nil && os.IsNotExist(err) {
+    	f, err = os.Create(filename)
+    	check(err)
+    }
+    err = f.Chmod(0666)
+    check(err)
+  // close the now existing file
+  	err = f.Close()
+  	check(err)
+  // Open it for writing
+  	f, err = os.OpenFile(filename, 01, 0666)
+  	check(err)
+  // Seek to the end
+  	_, error := f.Seek(int64(0), 2)
+  	check(error)
+  // File ready for writing next blob
+  
+  // Not quite
+  	r1 := bufio.NewWriter(f)
+  	_, err = fmt.Fprintf(r1, "Hello File \n")
+  	check(err)
+  	err = r1.Flush()
+ 	check(err)
+  // Ready for the game
 	newGame := true
 	for newGame {
 		games := Game{}
@@ -108,14 +157,26 @@ func main () {
 					games.Plays[i].Result = true
 				}
 			} // end of for i
-			wantsToPlay = false
+			reply := dialog("Another game? (Y/n): ")
+			reply = strings.TrimSpace(reply)
+			wantsToPlay = (reply != "n")
 			games.End = time.Now().Unix()
 			// print out value of games and plays
 			fmt.Println(games)
 			fmt.Printf("The game took %d seconds\n", games.End - games.Start)
+			// write game details to g
+			writeGame(&games)
 		} // end of for wantsToPlay
+		reply := dialog("A new player? (Y/n): ")
+		reply = strings.TrimSpace(reply)
+		newGame = (reply != "n")
 	}
 }
+
+func writeGame(gm *Game) {
+	return
+}
+	
 
 func dialog(str string) string {
 	fmt.Printf(str)
@@ -134,7 +195,7 @@ func whoAreYou(g *Game) {
 	var num int
 	var err error
 	nm := dialog("To play this game, please enter your name and Id number\n  Name: ")
-	id := dialog("Id number: ")
+	id := dialog("  Id number: ")
 	nm, id = strings.TrimSpace(nm), strings.TrimSpace(id)
 	if len(nm) == 0 {
 		fmt.Println("No name entered!!")
@@ -150,5 +211,14 @@ func whoAreYou(g *Game) {
 }
 
 func askNoOfSums() int {
-	return 6
+	var num int
+	var err error
+	goes := dialog("How many goes? : ")
+	goes = strings.TrimSpace(goes)
+	num, err = strconv.Atoi(goes); 
+	if err != nil {
+		fmt.Println("Sorry, not a number!!")
+		os.Exit(1)		// for now
+	}
+	return num
 }

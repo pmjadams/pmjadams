@@ -1,5 +1,5 @@
 //	xtable:  Practise your times table
-//				Feb 2015,  Ver. 0.3
+//				Mar 2015,  Ver. 0.8
 //
 //				Ver. 0.1	-	implement one play of the game
 //				Ver. 0.2	-	use Cursor codes to print success (or not) on
@@ -9,12 +9,11 @@
 //				Ver. 0.5	-	still tidying up
 //				Ver. 0.6	-	starting to data files items, debugging
 //				Ver. 0.7	-	can create/open file and append write to it
+//				Ver. 0.8	-	archive games to disk using gob encoding
 //
 //				ToDo: 
-//					Add archiving of games to disk.
-//					Develop the game to record players, offer a number of
-//					plays per game, e.g. 30, and play against the clock,
-//					e.g. 60 seconds.
+//						Write prog to read in games and display stats
+//						Then tidy up the code
 
 package main
 
@@ -27,6 +26,7 @@ import (
 		"time"
 		"strconv"
 		"strings"
+		"encoding/gob"
 )
 
 // One Game consists of a number of x times y 'plays'.
@@ -104,10 +104,10 @@ func main () {
   
   // Not quite
   	r1 := bufio.NewWriter(f)
-  	_, err = fmt.Fprintf(r1, "Hello File \n")
+  /*	_, err = fmt.Fprintf(r1, "Hello File \n")
   	check(err)
   	err = r1.Flush()
- 	check(err)
+ 	check(err)  	*/
   // Ready for the game
 	newGame := true
 	for newGame {
@@ -165,15 +165,22 @@ func main () {
 			fmt.Println(games)
 			fmt.Printf("The game took %d seconds\n", games.End - games.Start)
 			// write game details to g
-			writeGame(&games)
+			writeGame(r1, &games)
+			err = r1.Flush()
+			check(err)
 		} // end of for wantsToPlay
 		reply := dialog("A new player? (Y/n): ")
 		reply = strings.TrimSpace(reply)
 		newGame = (reply != "n")
 	}
+  	err = f.Close()
+  	check(err)
+
 }
 
-func writeGame(gm *Game) {
+func writeGame(r1 *bufio.Writer, gm *Game) {
+	encoder := gob.NewEncoder(r1)
+	encoder.Encode(gm)
 	return
 }
 	

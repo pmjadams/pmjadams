@@ -1,12 +1,13 @@
-//	booklib:  Process book records in sql format, in CSV format.
-//				Mar 2015,  Ver. 0.1
+//	booklib:  Read in book records from sql data dump (CSV format).
+//				Mar 2015,  Ver. 0.5
 //
 //				Ver. 0.1	-	implement the basics, plus debug output
 //				Ver. 0.2	-	read in one record of data
 //				Ver. 0.3	-	modify SplitN, seems to work :-)
 //				Ver. 0.4	-	simplify layout, remove reps
+//				Ver. 0.5	-	a few simple changes
 //
-//				ToDo: Marshall records to disk
+//				ToDo: Marshall records to disk, and tidy up the code.
 //
 
 package main
@@ -70,7 +71,7 @@ var record BookRec
 
 func main() {
 	// Read
-	f, err := os.Open("books.sql")
+	f, err := os.Open("books.sql")	// Test file
 	check(err)
 	// Define some counters and other temp vars
 	var i int    //	Indexes through fields in BookRec
@@ -117,16 +118,16 @@ func main() {
 		check(err)
 		i++
 		// Author
-		record.Author = strings.Trim(s, "'")
+		record.Author = strings.Trim(bits[i], "'")
 		i++
 		// Title
-		record.Title = strings.Trim(s, "'")
+		record.Title = strings.Trim(bits[i], "'")
 		i++
 		// Publisher
-		record.Publisher = strings.Trim(s, "'")
+		record.Publisher = strings.Trim(bits[i], "'")
 		i++
 		// Pub_Place
-		record.Pub_Place = strings.Trim(s, "'")
+		record.Pub_Place = strings.Trim(bits[i], "'")
 		i++
 		// Pub_Year
 		record.Pub_Year, err = strconv.Atoi(bits[i])
@@ -272,6 +273,19 @@ func main() {
 			parsing = false
 		}
 	}
+	// Test by printing one record
+	//
+	q := lb[j-3]
+	p := fmt.Printf
+	p("%d\n%s\n%s\n%s\n%s\n%d\n", q.Book_Id, q.Author, q.Title,  q.Publisher, q.Pub_Place, q.Pub_Year)
+	p("%s\n%s\n", q.Cn_Type, q.Cn_Source)
+	p("%d.%d\n", q.Cn_Item, q.Cn_Suffix)
+	p("%s\n%s\n%s\n%s\n", q.ISBN, q.ISSN, q.URL, q.Pages)
+	p("%d\n%s\n%d\n%d\n", q.Copies, q.Comment, q.Comment_Date, q.Barcode)
+	p("%s\n%s\n%d\n%d\n", q.HomeLib, q.HoldingLib, q.Onloan, q.DateLastBorrowed)
+	p("%+v\n%+v\n%+v\n%+v\n%t\n", q.NotForLoan, q.Damaged, q.ItemLost, q.Withdrawn, q.Restricted)
+	p("%s\n%d\n%d\n%d\n%d\n", q.ItemNotes, q.Issues, q.Renewals, q.Reserves, q.CopyNumber)
+	p("%s\n", time.Unix(q.Created_At, 0).Local())
 }
 
 // Generic split (from strings std lib), modified: splits after each instance of sep,

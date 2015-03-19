@@ -27,8 +27,7 @@ var j int //  Indexes through lb records
 
 func main() {
 	// Read
-	//f, err := os.Open("/Users/petera/LibraryDB/books.sql")
-	f, err := os.Open("books.sql")
+	f, err := os.Open("../books.sql")
 	check(err)
 
 	// Set input source.

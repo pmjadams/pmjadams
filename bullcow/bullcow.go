@@ -1,10 +1,10 @@
 // Bullcow	The Game of Bulls and Cows
 //
 //			Mar 2015
-//	  		V 0.1
+//	  		V 0.2
 //
 //		To Do:  seed Rand gen; check it generates a '9'
-//				5679 does work properly ??
+//				
 
 package main
 
@@ -93,12 +93,13 @@ func displayClues() {
 //  Run the game
 
 func main() {
-	for {
 		initVariables()
 		target = []byte(makeComputerTarget())
+	for {
 		getMove() 	// Ask for valid move.
 		displayClues()
 		if gameOver == true {
+			fmt.Println("Well done!")
 			break
 		}
 	}

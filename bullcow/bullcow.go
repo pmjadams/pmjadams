@@ -4,6 +4,7 @@
 //	  		V 0.1
 //	  		V 0.2
 //	  		V 0.3	add rand seed; convert byte -> string; screen user input
+//			V 0.4	change rand seed to use 'Now' in nsecs
 //
 //			Note: rand.Intn(N) seems to generate nos from 0 - (N-1), not N
 //				
@@ -30,17 +31,15 @@ var gameOver bool
 // In case the game runs in a loop, initialise (again)
 func initVariables() {
 	gameOver = false
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixNano())
 }
 
 //  Ask the player for his or her next move
 func getMove() {
 	for {
-		m := askMove()
-		if m == "QUIT" {
+		if move = askMove(); move == "QUIT" {
 			os.Exit(0)
 		}
-		move = m
 		return
 	}
 }

@@ -5,9 +5,11 @@
 //	  		V 0.2
 //	  		V 0.3	add rand seed; convert byte -> string; screen user input
 //			V 0.4	change rand seed to use 'Now' in nsecs
+//			V 0.5	mask seed for rand. Make code Windows friendly
 //
-//			Note: rand.Intn(N) seems to generate nos from 0 - (N-1), not N
-//				
+//			Note: rand.Intn(N) seems to generate numbers from 0 - (N-1), not 0 - N
+//
+//			ToDo: print out version number if asked
 
 package main
 
@@ -16,6 +18,7 @@ import (
 	"os"
 	"bufio"
 	"math/rand"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -27,11 +30,38 @@ var target string
 // Latest move by player
 var move string
 
+// On Windows the EOL is CR NL, otherwise it is NL
+// The input line is read in up to and including the NL
+// LENEOL is 1 for Windows, 0 for Unix-like, viz. the extra line length
+var ΔEOL int = 0
+
+//  Run the game
+
+func main() {
+	if runtime.GOOS == "windows" {
+		ΔEOL = 1
+	}
+	initVariables()
+	target = makeComputerTarget()
+	for {
+		getMove() 	// Ask for a valid move.
+		displayClues()
+		if gameOver == true {
+			fmt.Println("Well done!")
+			break
+		}
+	}
+}
+			
 var gameOver bool
+
 // In case the game runs in a loop, initialise (again)
 func initVariables() {
 	gameOver = false
-	rand.Seed(time.Now().UnixNano())
+	a := time.Now().UnixNano()
+	b := a & 0xFFFFFFFF		// Mask
+	rand.Seed(b)
+
 }
 
 //  Ask the player for his or her next move
@@ -53,10 +83,11 @@ func askMove() string {
 	if err != nil {
 		os.Exit(1)		// Something seriously wrong
 	}
-	if len(line) != 5 {
+	ll := len(line) + ΔEOL
+	if ll != 5 { 
 		return "QUIT"		// Tell the caller that player wants out!
 	}
-	// Strip NL
+	// Strip EOL
 	l := line[0:4]
 	// Use this fn to check a number has been input
 	if _, err := strconv.Atoi(l); err != nil {
@@ -110,20 +141,4 @@ func displayClues() {
 	}
 	return	
 }
-
-//  Run the game
-
-func main() {
-	initVariables()
-	target = makeComputerTarget()
-	for {
-		getMove() 	// Ask for a valid move.
-		displayClues()
-		if gameOver == true {
-			fmt.Println("Well done!")
-			break
-		}
-	}
-}
-			
 
